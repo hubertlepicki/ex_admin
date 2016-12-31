@@ -39,8 +39,7 @@ defmodule ExAdmin.ResourceController do
       defp handle_changeset_error(conn, defn, changeset, params) do
         conn = put_flash(conn, :inline_error, changeset.errors)
         |> Plug.Conn.assign(:changeset, changeset)
-        |> Plug.Conn.assign(:ea_required,
-           defn.resource_model.changeset(conn.assigns.resource).required)
+        |> Plug.Conn.assign(:ea_required, changeset.required)
         contents = do_form_view(conn, ExAdmin.Changeset.get_data(changeset), params)
         render(conn, "admin.html", html: contents, filters: nil)
       end
@@ -87,10 +86,10 @@ defmodule ExAdmin.ResourceController do
       end
       defp load_resource(conn, action, defn, resource_id) do
         model = defn.__struct__
-        query = model.run_query(repo, defn, action, resource_id)
+        query = model.run_query(repo(), defn, action, resource_id)
         resource =
         Authorization.authorize_query(defn.resource_model.__struct__, conn, query, action, resource_id)
-        |> ExAdmin.Query.execute_query(repo, action, resource_id)
+        |> ExAdmin.Query.execute_query(repo(), action, resource_id)
 
         if resource == nil do
           raise Phoenix.Router.NoRouteError, conn: conn, router: __MODULE__
