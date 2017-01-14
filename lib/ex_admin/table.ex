@@ -36,8 +36,9 @@ defmodule ExAdmin.Table do
                   end
                   for {k,v} <- data do
                     tr do
+                      value = ExAdmin.Render.to_string(v)
                       field_header "#{f_name} #{k}"
-                      td ".td-#{parameterize k} #{v}"
+                      td ".td-#{parameterize k} #{value}"
                     end
                   end
                 contents, f_name ->
@@ -147,8 +148,7 @@ defmodule ExAdmin.Table do
   end
 
   def build_th({field_name, opts}, table_opts) do
-    label = Map.get(opts, :label, to_string(field_name))
-    build_th(label, opts, table_opts)
+    build_th(to_string(field_name), opts, table_opts)
   end
   def build_th(field_name, _),
     do: th(".th-#{parameterize field_name} #{humanize field_name}")
@@ -156,7 +156,7 @@ defmodule ExAdmin.Table do
     if String.to_atom(field_name) in fields and opts in [%{}, %{link: true}] do
       _build_th(field_name, opts, table_opts)
     else
-      th(".th-#{parameterize field_name} #{humanize field_name}")
+      th(".th-#{parameterize field_name} #{humanize Map.get(opts, :label, to_string(field_name))}")
     end
   end
   def build_th(field_name, _, _), do: build_th(field_name, nil)
@@ -178,7 +178,7 @@ defmodule ExAdmin.Table do
         Map.get(table_opts, :filter, ""))
     end
   end
-  def _build_th(field_name, _opts, %{path_prefix: path_prefix} = table_opts) do
+  def _build_th(field_name, opts, %{path_prefix: path_prefix} = table_opts) do
     sort = Map.get(table_opts, :sort, "asc")
     page_segment = case Map.get table_opts, :page, nil do
       nil -> ""
@@ -189,7 +189,7 @@ defmodule ExAdmin.Table do
       scope -> "&scope=#{scope}"
     end
     th(".sortable.th-#{field_name}") do
-      a("#{humanize field_name}", href: path_prefix <>
+      a("#{humanize Map.get(opts, :label, to_string(field_name))}", href: path_prefix <>
         field_name <> "_#{sort}#{page_segment}" <> scope_segment <>
         Map.get(table_opts, :filter, ""))
     end
